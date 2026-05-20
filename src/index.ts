@@ -7,4 +7,12 @@ export type {
   WedeSyncBatch,
   WedeConnectivityStatus,
   WedeResponse,
+  WedeParser,
+  WedeParserField,
+  WedeFieldType,
+  WedeFieldSection,
+  WedeWebhook,
+  WedeCreateWebhook,
+  WedeTenant,
+  WedeUsage,
 } from './types.js'

@@ -1,4 +1,8 @@
-import { WedeClientOptions, WedeEvent, WedeZone, WedeSyncBatch, WedeConnectivityStatus, WedeResponse } from './types.js'
+import {
+  WedeClientOptions, WedeEvent, WedeZone, WedeSyncBatch,
+  WedeConnectivityStatus, WedeResponse, WedeParser, WedeParserField,
+  WedeWebhook, WedeCreateWebhook, WedeTenant, WedeUsage
+} from './types.js'
 import { WedeError, WedeAuthError, WedeNetworkError } from './errors.js'
 
 const DEFAULT_BASE_URL = 'https://api.wede.pt'
@@ -54,6 +58,7 @@ export class WedeClient {
     }
   }
 
+  // Events
   async sendEvent(event: WedeEvent): Promise<WedeResponse<{ event_id: string }>> {
     return this.request('POST', '/v1/events', event)
   }
@@ -63,6 +68,7 @@ export class WedeClient {
     return this.request('GET', '/v1/events' + qs)
   }
 
+  // Zones
   async listZones(): Promise<WedeResponse<WedeZone[]>> {
     return this.request('GET', '/v1/zones')
   }
@@ -71,10 +77,16 @@ export class WedeClient {
     return this.request('GET', '/v1/zones/' + zoneId)
   }
 
+  // Sync
   async syncBatch(batch: WedeSyncBatch): Promise<WedeResponse<{ accepted: number; rejected: number }>> {
     return this.request('POST', '/v1/sync/batch', batch)
   }
 
+  async getSyncStatus(batchId: string): Promise<WedeResponse<Record<string, unknown>>> {
+    return this.request('GET', '/v1/sync/status?batch_id=' + batchId)
+  }
+
+  // Connectivity
   async getConnectivityStatus(zoneId: string): Promise<WedeResponse<WedeConnectivityStatus>> {
     return this.request('GET', '/v1/connectivity/status?zone_id=' + zoneId)
   }
@@ -83,31 +95,46 @@ export class WedeClient {
     return this.request('POST', '/v1/connectivity/report', report)
   }
 
-  async getTenantInfo(): Promise<WedeResponse<Record<string, unknown>>> {
+  // Tenant
+  async getTenantInfo(): Promise<WedeResponse<WedeTenant>> {
     return this.request('GET', '/v1/tenant/me')
   }
 
-  async getUsage(from: string, to: string): Promise<WedeResponse<Record<string, unknown>>> {
+  async getUsage(from: string, to: string): Promise<WedeResponse<WedeUsage>> {
     return this.request('GET', '/v1/tenant/usage?from=' + from + '&to=' + to)
   }
 
-  async listParsers(): Promise<WedeResponse<Record<string, unknown>[]>> {
+  // Parsers
+  async listParsers(): Promise<WedeResponse<WedeParser[]>> {
     return this.request('GET', '/v1/parsers')
   }
 
-  async getParser(parserId: string): Promise<WedeResponse<Record<string, unknown>>> {
+  async getParser(parserId: string): Promise<WedeResponse<WedeParser>> {
     return this.request('GET', '/v1/parsers/' + parserId)
   }
 
-  async createParser(parser: { vertical: string; name: string; description?: string; schema: Record<string, unknown>[] }): Promise<WedeResponse<Record<string, unknown>>> {
+  async getActiveParser(vertical: string): Promise<WedeResponse<WedeParser>> {
+    return this.request('GET', '/v1/parsers/vertical/' + vertical + '/active')
+  }
+
+  async createParser(parser: { vertical: string; name: string; description?: string; schema: WedeParserField[] }): Promise<WedeResponse<WedeParser>> {
     return this.request('POST', '/v1/parsers', parser)
   }
 
-  async updateParser(parserId: string, data: { name?: string; description?: string; schema?: Record<string, unknown>[]; is_active?: boolean }): Promise<WedeResponse<Record<string, unknown>>> {
+  async updateParser(parserId: string, data: { name?: string; description?: string; schema?: WedeParserField[]; is_active?: boolean }): Promise<WedeResponse<WedeParser>> {
     return this.request('PATCH', '/v1/parsers/' + parserId, data)
   }
 
-  async getActiveParser(vertical: string): Promise<WedeResponse<Record<string, unknown>>> {
-    return this.request('GET', '/v1/parsers/vertical/' + vertical + '/active')
+  // Webhooks
+  async listWebhooks(): Promise<WedeResponse<WedeWebhook[]>> {
+    return this.request('GET', '/v1/webhooks')
+  }
+
+  async createWebhook(webhook: WedeCreateWebhook): Promise<WedeResponse<WedeWebhook>> {
+    return this.request('POST', '/v1/webhooks', webhook)
+  }
+
+  async deleteWebhook(webhookId: string): Promise<void> {
+    return this.request('DELETE', '/v1/webhooks/' + webhookId)
   }
 }
