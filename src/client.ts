@@ -90,4 +90,24 @@ export class WedeClient {
   async getUsage(from: string, to: string): Promise<WedeResponse<Record<string, unknown>>> {
     return this.request('GET', '/v1/tenant/usage?from=' + from + '&to=' + to)
   }
+
+  async listParsers(): Promise<WedeResponse<Record<string, unknown>[]>> {
+    return this.request('GET', '/v1/parsers')
+  }
+
+  async getParser(parserId: string): Promise<WedeResponse<Record<string, unknown>>> {
+    return this.request('GET', '/v1/parsers/' + parserId)
+  }
+
+  async createParser(parser: { vertical: string; name: string; description?: string; schema: Record<string, unknown>[] }): Promise<WedeResponse<Record<string, unknown>>> {
+    return this.request('POST', '/v1/parsers', parser)
+  }
+
+  async updateParser(parserId: string, data: { name?: string; description?: string; schema?: Record<string, unknown>[]; is_active?: boolean }): Promise<WedeResponse<Record<string, unknown>>> {
+    return this.request('PATCH', '/v1/parsers/' + parserId, data)
+  }
+
+  async getActiveParser(vertical: string): Promise<WedeResponse<Record<string, unknown>>> {
+    return this.request('GET', '/v1/parsers/vertical/' + vertical + '/active')
+  }
 }
