@@ -15,4 +15,10 @@ export type {
   WedeCreateWebhook,
   WedeTenant,
   WedeUsage,
+  WedeTeam,
+  WedeTeamMember,
+  WedeScoredTeam,
+  WedeMission,
+  WedeBilling,
+  MissionStatus,
 } from './types.js'
