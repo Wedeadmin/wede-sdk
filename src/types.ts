@@ -177,6 +177,25 @@ export interface WedeMission {
   failed_at?: string
 }
 
+export interface WedeCatalogAction {
+  id: string
+  tenant_id: string
+  vertical: string
+  code: string
+  name: string
+  description?: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface WedeCreateCatalogAction {
+  vertical: string
+  code: string
+  name: string
+  description?: string
+}
+
 export interface WedeBilling {
   tenant_id: string
   country: string

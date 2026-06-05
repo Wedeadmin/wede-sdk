@@ -21,4 +21,6 @@ export type {
   WedeMission,
   WedeBilling,
   MissionStatus,
+  WedeCatalogAction,
+  WedeCreateCatalogAction,
 } from './types.js'

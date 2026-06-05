@@ -2,7 +2,8 @@ import {
   WedeClientOptions, WedeEvent, WedeZone, WedeSyncBatch,
   WedeConnectivityStatus, WedeResponse, WedeParser, WedeParserField,
   WedeWebhook, WedeCreateWebhook, WedeTenant, WedeUsage,
-  WedeTeam, WedeScoredTeam, WedeMission, WedeBilling, MissionStatus
+  WedeTeam, WedeScoredTeam, WedeMission, WedeBilling, MissionStatus,
+  WedeCatalogAction, WedeCreateCatalogAction
 } from './types.js'
 import { WedeError, WedeAuthError, WedeNetworkError } from './errors.js'
 
@@ -126,6 +127,20 @@ export class WedeClient {
     return this.request('PATCH', '/v1/parsers/' + parserId, data)
   }
 
+
+  // Catalog
+  async listCatalogActions(vertical?: string): Promise<WedeResponse<WedeCatalogAction[]>> {
+    const qs = vertical ? '?vertical=' + vertical : ''
+    return this.request('GET', '/v1/catalog/actions' + qs)
+  }
+
+  async createCatalogAction(action: WedeCreateCatalogAction): Promise<WedeResponse<WedeCatalogAction>> {
+    return this.request('POST', '/v1/catalog/actions', action)
+  }
+
+  async deleteCatalogAction(actionId: string): Promise<void> {
+    return this.request('DELETE', '/v1/catalog/actions/' + actionId)
+  }
 
   // Teams
   async listTeams(params?: { tenant_id?: string }): Promise<WedeResponse<WedeTeam[]>> {
