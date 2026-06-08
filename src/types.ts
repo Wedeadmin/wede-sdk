@@ -1,9 +1,16 @@
 
+export interface WedeStorage {
+  getItem(key: string): string | null | Promise<string | null>
+  setItem(key: string, value: string): void | Promise<void>
+  removeItem(key: string): void | Promise<void>
+}
+
 export interface WedeClientOptions {
   apiKey: string
   baseUrl?: string
   timeout?: number
   retries?: number
+  storage?: WedeStorage
 }
 
 export interface WedeEvent {
@@ -140,6 +147,9 @@ export interface WedeTeam {
   vertical: string
   status: 'available' | 'on_mission' | 'offline'
   zone_id?: string
+  zone_lat?: number
+  zone_lng?: number
+  equipment?: string[]
   members?: WedeTeamMember[]
   created_at: string
   updated_at: string

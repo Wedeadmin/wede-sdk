@@ -6,6 +6,8 @@ import {
   WedeCatalogAction, WedeCreateCatalogAction
 } from './types.js'
 import { WedeError, WedeAuthError, WedeNetworkError } from './errors.js'
+import { WedeOfflineDispatch } from './offlineDispatch.js'
+import { WedeCache } from './cache.js'
 
 const DEFAULT_BASE_URL = 'https://api.wede.pt'
 const DEFAULT_TIMEOUT = 10000
@@ -16,6 +18,8 @@ export class WedeClient {
   private readonly baseUrl: string
   private readonly timeout: number
   private readonly retries: number
+  readonly offline: WedeOfflineDispatch | null
+  readonly cache: WedeCache | null
 
   constructor(options: WedeClientOptions) {
     if (!options.apiKey) throw new WedeAuthError('API key is required')
@@ -23,6 +27,8 @@ export class WedeClient {
     this.baseUrl = options.baseUrl ?? DEFAULT_BASE_URL
     this.timeout = options.timeout ?? DEFAULT_TIMEOUT
     this.retries = options.retries ?? DEFAULT_RETRIES
+    this.offline = options.storage ? new WedeOfflineDispatch(options.storage) : null
+    this.cache = options.storage ? new WedeCache(options.storage) : null
   }
 
   private async request<T>(method: string, path: string, body?: unknown, attempt = 1): Promise<T> {
@@ -195,5 +201,37 @@ export class WedeClient {
 
   async deleteWebhook(webhookId: string): Promise<void> {
     return this.request('DELETE', '/v1/webhooks/' + webhookId)
+  }
+
+  async sync(): Promise<{ synced: number; failed: number }> {
+    if (!this.offline) return { synced: 0, failed: 0 }
+    const pending = await this.offline.getPendingQueue()
+    let synced = 0, failed = 0
+    for (const entry of pending) {
+      try {
+        await this.request('POST', '/v1/teams/dispatch/action', {
+          action_id: entry.action_id,
+          lat: entry.event.lat,
+          lng: entry.event.lng,
+          offline_queue_id: entry.id,
+        })
+        await this.offline.markSynced(entry.id)
+        synced++
+      } catch { failed++ }
+    }
+    await this.offline.clearSynced()
+    return { synced, failed }
+  }
+
+  async refreshCache(): Promise<void> {
+    if (!this.cache) return
+    try {
+      const [teamsRes, catalogRes] = await Promise.all([
+        this.request<{ data: WedeTeam[] }>('GET', '/v1/teams'),
+        this.request<{ data: WedeCatalogAction[] }>('GET', '/v1/catalog/actions'),
+      ])
+      await this.cache.setTeams(teamsRes.data)
+      await this.cache.setCatalog(catalogRes.data)
+    } catch {}
   }
 }
