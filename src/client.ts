@@ -234,4 +234,45 @@ export class WedeClient {
       await this.cache.setCatalog(catalogRes.data)
     } catch {}
   }
+
+  /**
+   * Register this device with the server.
+   * Call once on first install. Safe to call multiple times (idempotent).
+   */
+  async registerDevice(params: {
+    device_id: string
+    platform: 'ios' | 'android' | 'web' | 'other'
+    app_version?: string
+  }): Promise<{ device_id: string; registered: boolean }> {
+    return this.request('POST', '/v1/devices/register', params)
+  }
+
+  /**
+   * Sync offline dispatch queue with server.
+   * Sends all pending dispatches and receives server confirmation.
+   * Queue persists until server confirms — no data loss.
+   */
+  async syncDeviceQueue(params: {
+    device_id: string
+    last_received_seq: number
+    dispatches: Array<{
+      sequence_number: number
+      action_id?: string
+      event_lat?: number
+      event_lng?: number
+      vertical?: string
+      priority?: string
+      payload?: Record<string, unknown>
+      created_offline_at: string
+    }>
+  }): Promise<{
+    accepted: number[]
+    duplicates: number[]
+    failed: number[]
+    server_seq: number
+    device_last_received_seq: number
+    synced_at: string
+  }> {
+    return this.request('POST', '/v1/devices/sync', params)
+  }
 }
